@@ -1,0 +1,45 @@
+<section *ngIf="bank">
+  <!-- description -->
+  <section>
+    <h2>You selected: {{bank.name}}</h2>
+    <h3>Description</h3>
+    <p>
+      {{bank.name}} capital {{bank.capital}} and has {{bank.client}} client(s).
+    </p>
+  </section>
+
+  <!-- form -->
+  <section>
+    <form (ngSubmit)="saveBankDetails()" #bankForm="ngForm">
+      <div>
+        <label for="name">Name: </label>
+        <input type="text" name="name" [(ngModel)]="bank.name" required #name="ngModel">
+        <div [hidden]="name.valid || name.pristine" class="error">
+            Name is required my good sir/lady!
+        </div>
+      </div>
+      <div>
+        <label for="weight">Capital: </label>
+        <input type="number" name="capital" [(ngModel)]="bank.capital" min=0 max=1000000000 #capital="ngModel">
+        <div *ngIf="capital.errors && (capital.dirty || capital.touched)"
+            class="error">
+            <p [hidden]="!capital.errors.min">
+              Capital must be bigger than 0. {{capital.value}} is way too low.
+            </p>
+            <p [hidden]="!capital.errors.max">
+              Capital can't be bigger than a $1000000000. {{capital.value}} is too big to fail
+            </p>
+        </div>
+      </div>
+      <div>
+        <label for="height">Clients: </label>
+        <input type="number" name="client" [(ngModel)]="bank.client">
+      </div>
+
+
+      <button type="submit" [disabled]="!bankForm.form.valid">Save</button>
+    </form>
+  </section>
+
+  <button (click)="gotoBanksList()">Back to banks list</button>
+<section>
