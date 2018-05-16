@@ -8,6 +8,7 @@ import { BankListComponent } from './bank-list/bank-list.component';
 import { BankService } from './bank.service';
 import { BankDetailsComponent } from './bank-details/bank-details.component';
 import {CognitoUtil} from "./service/cognito.service";
+import {ApigClientFactory} from "./service/apigClient.service";
 
 
 import { AppRoutingModule } from './app-routing.module';
@@ -28,7 +29,7 @@ import { MaxValidatorDirective } from './max-validator.directive';
     HttpModule,
     AppRoutingModule,
   ],
-  providers: [BankService,CognitoUtil],
+  providers: [BankService,CognitoUtil, ApigClientFactory],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
