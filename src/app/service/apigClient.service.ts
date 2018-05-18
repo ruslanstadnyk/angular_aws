@@ -13,30 +13,111 @@
  * permissions and limitations under the License.
  */
 import { Injectable } from "@angular/core";
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/catch';
+import 'rxjs/add/observable/throw';
+import 'rxjs/add/observable/fromPromise';
+
+
 
 import {APIGatewayClient, Utils, uritemplate} from 'aws-api-client'
 
 export class ApigClient {
     constructor(private apiGatewayClient : APIGatewayClient, private pathComponent:string, private authType:string, private apiKey:string ){
     }
-  
-    bankGet(params, body, additionalParams) {
+
+    // checkGet(params, body, additionalParams):Observable<any> {
+    //     if(additionalParams === undefined) { additionalParams = {}; }
+    //     var utils = new Utils();
+        
+    //     utils.assertParametersDefined(params, [], ['body']);
+        
+    //     var checkGetRequest = {
+    //         verb: 'get'.toUpperCase(),
+    //         path: this.pathComponent + uritemplate('/check').expand(utils.parseParametersToObject(params, [])),
+    //         headers: utils.parseParametersToObject(params, []),
+    //         queryParams: utils.parseParametersToObject(params, []),
+    //         body: body
+    //     };
+        
+    //     return   Observable.fromPromise(this.apiGatewayClient.makeRequest(checkGetRequest, this.authType, additionalParams, this.apiKey));
+        
+    // };
+    
+    checkGet(params, body, additionalParams) {
         if(additionalParams === undefined) { additionalParams = {}; }
         var utils = new Utils();
         
         utils.assertParametersDefined(params, [], ['body']);
         
-        var bankGetRequest = {
+        var checkGetRequest = {
             verb: 'get'.toUpperCase(),
-            path: this.pathComponent + uritemplate('/bank').expand(utils.parseParametersToObject(params, [])),
+            path: this.pathComponent + uritemplate('/check').expand(utils.parseParametersToObject(params, [])),
             headers: utils.parseParametersToObject(params, []),
             queryParams: utils.parseParametersToObject(params, []),
             body: body
         };
         
+        return   this.apiGatewayClient.makeRequest(checkGetRequest, this.authType, additionalParams, this.apiKey);
         
-        return this.apiGatewayClient.makeRequest(bankGetRequest, this.authType, additionalParams, this.apiKey);
     };
+    
+
+    rootGet(params, body, additionalParams):Observable<any>{
+        if(additionalParams === undefined) { additionalParams = {}; }
+        var utils = new Utils();
+        
+        utils.assertParametersDefined(params, [], ['body']);
+        
+        var rootGetRequest = {
+            verb: 'get'.toUpperCase(),
+            path: this.pathComponent + uritemplate('/').expand(utils.parseParametersToObject(params, [])),
+            headers: utils.parseParametersToObject(params, []),
+            queryParams: utils.parseParametersToObject(params, []),
+            body: body
+        };
+        
+        return   Observable.fromPromise(this.apiGatewayClient.makeRequest(rootGetRequest, this.authType, additionalParams, this.apiKey));
+        
+    };
+    
+
+    checkPost(params, body, additionalParams):Observable<any> {
+        if(additionalParams === undefined) { additionalParams = {}; }
+         var utils = new Utils();
+        
+        utils.assertParametersDefined(params, [], ['body']);
+        
+        var checkPostRequest = {
+            verb: 'post'.toUpperCase(),
+            path: this.pathComponent + uritemplate('/check').expand(utils.parseParametersToObject(params, [])),
+            headers: utils.parseParametersToObject(params, []),
+            queryParams: utils.parseParametersToObject(params, []),
+            body: body
+        };
+        return   Observable.fromPromise(this.apiGatewayClient.makeRequest(checkPostRequest, this.authType, additionalParams, this.apiKey));
+    };
+    
+
+
+    // bankGet(params, body, additionalParams) {
+    //     if(additionalParams === undefined) { additionalParams = {}; }
+    //     var utils = new Utils();
+        
+    //     utils.assertParametersDefined(params, [], ['body']);
+        
+    //     var bankGetRequest = {
+    //         verb: 'get'.toUpperCase(),
+    //         path: this.pathComponent + uritemplate('/bank').expand(utils.parseParametersToObject(params, [])),
+    //         headers: utils.parseParametersToObject(params, []),
+    //         queryParams: utils.parseParametersToObject(params, []),
+    //         body: body
+    //     };
+        
+        
+    //     return this.apiGatewayClient.makeRequest(bankGetRequest, this.authType, additionalParams, this.apiKey);
+    // };
     
 
 
@@ -86,7 +167,9 @@ newClient(config): ApigClient {
 
     
     // extract endpoint and path from url
-    var invokeUrl = 'https://lgujs19878.execute-api.us-east-1.amazonaws.com/test';
+    //var invokeUrl = 'https://lgujs19878.execute-api.us-east-1.amazonaws.com/test';
+    var invokeUrl = 'https://1ejbudder0.execute-api.us-east-1.amazonaws.com/dev'
+    //var invokeUrl ='https://6i523p7rbb.execute-api.us-east-1.amazonaws.com/dev';
     var endpoint = /(^https?:\/\/[^\/]+)/g.exec(invokeUrl)[1];
     var pathComponent = invokeUrl.substring(endpoint.length);
 

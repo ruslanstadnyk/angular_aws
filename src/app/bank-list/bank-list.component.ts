@@ -16,20 +16,20 @@ AWS.config.credentials = new AWS.CognitoIdentityCredentials({
 @Component({
   selector: 'app-bank-list',
   template: `
+  <button (click)="getBanks()">get Banks</button>
   <section *ngIf="isLoading && !errorMessage">
   Loading our hyperdrives!!! Retrieving data...
-
-  <button (click)="getBanks()">get Banks</button>
-
   </section>
   <!-- this is the new syntax for ng-repeat -->
+  <p>{{status}}</p>
   <ul>
-    <li *ngFor="let bank of banks">
-      <a [routerLink]="['/banks', bank.id]">
-        {{bank.name}} 
-      </a>
-    </li>
-  </ul>
+  <li *ngFor="let message of messages">
+    
+      {{message}} 
+    
+  </li>
+</ul>
+
   <!-- HERE: added this error message -->
   <section *ngIf="errorMessage">
     {{errorMessage}}
@@ -40,6 +40,10 @@ AWS.config.credentials = new AWS.CognitoIdentityCredentials({
 })
 export class BankListComponent implements OnInit {
   banks: Bank[] = [];
+  
+  messages :string[] = [];
+  status :any;
+  statusObj :any;
   errorMessage: string = '';
   isLoading: boolean = true;
 
@@ -84,7 +88,7 @@ export class BankListComponent implements OnInit {
 
   
     var params = {};
-    var body = {};
+    var body = "2002";
     var additionalParams = {};
     
     var apigwClient = this.apigClientFactory.newClient({
@@ -94,15 +98,34 @@ export class BankListComponent implements OnInit {
       region: "us-east-1"
     });
   
-    
-    apigwClient.bankGet(params, body, additionalParams)
-      .then(function (result) {
-          console.log(result);
-          alert('Successful ping: ' + result.data.status + ' - ' + result.data.agent);
-      }).catch(function (result) {
-          alert('Failed ping');
-          console.log(result);
-      });
+    apigwClient.checkPost(params, body, additionalParams).subscribe(  
+             /* happy path */ p => {
+               //this.messages = p.data.slice(1);
+               console.log("PE",p);
+
+               var dt :Array<string> =  p.data;
+               this.status = JSON.parse(JSON.stringify('{'+dt[0]+'}').replace(/\s/g,"").replace("TheS3MemeberAssetfetched",'"TheS3MemeberAssetfetched"')) ;
+               this.messages = dt.slice(1); 
+               console.log("DDTT==",this.status);
+for(var prop in this.status){
+console.log("typopoppp", typeof this.status);
+}
+
+              console.log("se",this.status);
+//              console.log("ms",this.messages);
+
+            },
+              /* error path */ e => this.errorMessage = e,
+              /* onCompleted */ () => this.isLoading = false) ;
+
+    // apigwClient.checkGet(params, body, additionalParams)
+    //   .then(function (result) {
+    //       console.log(result);
+    //       alert('Successful ping: ' + result.data.status + ' - ' + result.data.agent);
+    //   }).catch(function (result) {
+    //       alert('Failed ping');
+    //       console.log(result);
+    //   });
     
   
    }

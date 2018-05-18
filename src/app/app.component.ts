@@ -59,7 +59,7 @@ export class AppComponent  implements  OnInit{
       var RPID = encodeURIComponent(environment.relayingPartyId);
       var result = environment.adfsUrl + "?loginToRp=" + RPID;
       sessionStorage.setItem('activelogin', 'inProgress');
-      //window.location.href = result;
+      window.location.href = result;
   }   
   else {//Credentials exist, page refresh, etc.
       console.log('activelogin already exists in session and the value is ' + activelogin);
