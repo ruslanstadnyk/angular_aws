@@ -1,86 +1,79 @@
-import { Component, OnInit } from '@angular/core';
+import { Component,  OnInit} from '@angular/core';
+
 import {CognitoUtil, LoggedInCallback} from "./service/cognito.service";
-import {ApigClient, ApigClientFactory} from "./service/apigClient.service";
-import * as AWS from "aws-sdk/global";
 import { environment } from "../environments/environment";
+import * as CognitoIdentity from "aws-sdk/clients/cognitoidentity";
+import { CognitoIdentityCredentials } from 'aws-sdk/global';
 
- 
-const samlResponse : string ="PHNhbWxwOlJlc3BvbnNlIElEPSJfZWZmNGQ0YWEtYjdiOS00ZWQ4LTljZWQtNjY2MzcxZTE0MDgwIiBWZXJzaW9uPSIyLjAiIElzc3VlSW5zdGFudD0iMjAxOC0wNS0xNlQwMjozMjoyMC4yODJaIiBEZXN0aW5hdGlvbj0iaHR0cHM6Ly90ZDZ0b3JtajhqLmV4ZWN1dGUtYXBpLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tL2Rldi9zYW1sIiBDb25zZW50PSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6Y29uc2VudDp1bnNwZWNpZmllZCIgeG1sbnM6c2FtbHA9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDpwcm90b2NvbCI+PElzc3VlciB4bWxucz0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOmFzc2VydGlvbiI+aHR0cDovL1dJTi0zVldMNkVLVTlWWS5hZGZzLmxvY2FsL2FkZnMvc2VydmljZXMvdHJ1c3Q8L0lzc3Vlcj48c2FtbHA6U3RhdHVzPjxzYW1scDpTdGF0dXNDb2RlIFZhbHVlPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6c3RhdHVzOlN1Y2Nlc3MiIC8+PC9zYW1scDpTdGF0dXM+PEFzc2VydGlvbiBJRD0iXzM1ZDNkMGNhLTk3NmQtNGFlOC04NWU1LWU2OTM5MGIzNjYwZSIgSXNzdWVJbnN0YW50PSIyMDE4LTA1LTE2VDAyOjMyOjIwLjI4MloiIFZlcnNpb249IjIuMCIgeG1sbnM9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDphc3NlcnRpb24iPjxJc3N1ZXI+aHR0cDovL1dJTi0zVldMNkVLVTlWWS5hZGZzLmxvY2FsL2FkZnMvc2VydmljZXMvdHJ1c3Q8L0lzc3Vlcj48ZHM6U2lnbmF0dXJlIHhtbG5zOmRzPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwLzA5L3htbGRzaWcjIj48ZHM6U2lnbmVkSW5mbz48ZHM6Q2Fub25pY2FsaXphdGlvbk1ldGhvZCBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvMTAveG1sLWV4Yy1jMTRuIyIgLz48ZHM6U2lnbmF0dXJlTWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS8wNC94bWxkc2lnLW1vcmUjcnNhLXNoYTI1NiIgLz48ZHM6UmVmZXJlbmNlIFVSST0iI18zNWQzZDBjYS05NzZkLTRhZTgtODVlNS1lNjkzOTBiMzY2MGUiPjxkczpUcmFuc2Zvcm1zPjxkczpUcmFuc2Zvcm0gQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwLzA5L3htbGRzaWcjZW52ZWxvcGVkLXNpZ25hdHVyZSIgLz48ZHM6VHJhbnNmb3JtIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS8xMC94bWwtZXhjLWMxNG4jIiAvPjwvZHM6VHJhbnNmb3Jtcz48ZHM6RGlnZXN0TWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS8wNC94bWxlbmMjc2hhMjU2IiAvPjxkczpEaWdlc3RWYWx1ZT5FeHVtZW9GTjBSQTNYM1VuTU5HOWxjZDBabmhCVG1LeUZGTS9hSHRsUlQwPTwvZHM6RGlnZXN0VmFsdWU+PC9kczpSZWZlcmVuY2U+PC9kczpTaWduZWRJbmZvPjxkczpTaWduYXR1cmVWYWx1ZT5pVHFibzhUT1JDM3VLcHZyVUs3L3BwRFM2aUcrVDBTM2tyQ3IvZWRhNHFiMWZYYWdFN2VNNTZuQjZoYTJYUTVJbTdETWc5NkN1SzYzdVZxR212anVQL1c1Sy9HRFIyVGNqb2o4dHk0ZXhucmJvdjV6M1RtZTIzN1NGMWc5enV5NzdheXRCYmlubkNMZWdCbzVjTU5BVDVTVjM2UjAySlVSRC9TRFJBK01lK2FRWWVzQUhOa2VyNkJRRUN2V1U2NzZ4Wk5qZElGU1AwTFRnUUVXYkxvaHo4V0RpTFhoM1VHY2xxOC9nREhRQTMvdXJLNWNXRlduU2dXbzdxQ1dmd05DaENrZWV1Z3FjS2pJL3ZEMmVXZUJUMHJaVEorL0R2SENwRjc5NG53QnBMSzViNEJ4ZndJd0xmaTFXWHdmUncxZkhUamdHOThrSHplbTVSaUk0cVowZlE9PTwvZHM6U2lnbmF0dXJlVmFsdWU+PEtleUluZm8geG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvMDkveG1sZHNpZyMiPjxkczpYNTA5RGF0YT48ZHM6WDUwOUNlcnRpZmljYXRlPk1JSUM4RENDQWRpZ0F3SUJBZ0lRZU9FOEdzdUFFS3RCTmFZT2syTjdaekFOQmdrcWhraUc5dzBCQVFzRkFEQTBNVEl3TUFZRFZRUURFeWxCUkVaVElGTnBaMjVwYm1jZ0xTQlhTVTR0TTFaWFREWkZTMVU1VmxrdVlXUm1jeTVzYjJOaGJEQWVGdzB4T0RBMU1EUXlNekEyTVROYUZ3MHhPVEExTURReU16QTJNVE5hTURReE1qQXdCZ05WQkFNVEtVRkVSbE1nVTJsbmJtbHVaeUF0SUZkSlRpMHpWbGRNTmtWTFZUbFdXUzVoWkdaekxteHZZMkZzTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF6Z3RtSUp3VGFJbVIzS1piWTdFcEcrWjVrbk5NS1J1ZTFISUJVdVd0bnFmNGl4OHlwZzRlWnVmK1dhbjJ0a3pjam9HYWYvSXZvem52MDBzRTlrajBMZXAvbiswenZSZDdmSTBLdWJ1Y01WaERGTTRGQ1ZNZWtOSjN2ODc2ZGNYbUR0aGYyWDhqK3JMMTF5TzI1MS9rTFNpSkp3SjlmRjBhblhzZ0NRWHZTOENCbFJ3emJmUTYvZWkrTndmUUdaM1pob0RYTHVIOSt3MzEvWGNtTWJDbkc3SXc1anVaYXJOc1Y0Z2JSM2VHTGMxOGhHSTkzRmVJQlJoTXhseFp4S2pVdW1HN0ZGL3hDdHNwVjJmR3BBOG5uMXJGVkphaS9CQXo4T05kYmRUc05rY0lFUjYwa1Y2QmN0WDVOcWdYalhXUmRXTVV1QXFYQlN3R0RJYk15ZXEwbXdJREFRQUJNQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUJBUUFEM0xWMzZSYllia2lFV2llNkZUYmlhWGV1NGV6YUQ0TWwvVitRSkVCUCs0R2tXNzFaZkdSMHhzVk9nTDVSdW52V2VobTAyMlB2QTZNQVA4SG92UTFyWk5YVVhmQ3lZU1Q2ekNVQU9JeS9CNUlrWWVWZUVpTnFyc01sZ0k1SzB5UC9DMEpUVlVYc0tVK0R2Tm51WVNJVmIwbExFWDJJaTI2TEV4MFRHNDFTbnpyVFJGSW9pc2dPYUkwR0lIcnEvQkpZbFErOUp1Z1dPUmVOcEdOQmRnelZ2NktEVGtHTlNXY053QVZpdEFrNkliTFpSN2tZMDVlS25vRzAvUy9Wa3pIWmJLSUFtWFpXZjNFTDNnSE5UMzRlcG9idklMTURpSWxmV0Z5UkIrQThtMmVFUlJUNVlwS0kyTktoekgvYTI2MGUrQys2QzNMRm1tS3M3YWZUankrcjwvZHM6WDUwOUNlcnRpZmljYXRlPjwvZHM6WDUwOURhdGE+PC9LZXlJbmZvPjwvZHM6U2lnbmF0dXJlPjxTdWJqZWN0PjxOYW1lSUQgRm9ybWF0PSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6bmFtZWlkLWZvcm1hdDpwZXJzaXN0ZW50Ij5BREZTXHJ1c2xhbjwvTmFtZUlEPjxTdWJqZWN0Q29uZmlybWF0aW9uIE1ldGhvZD0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOmNtOmJlYXJlciI+PFN1YmplY3RDb25maXJtYXRpb25EYXRhIE5vdE9uT3JBZnRlcj0iMjAxOC0wNS0xNlQwMjozNzoyMC4yODJaIiBSZWNpcGllbnQ9Imh0dHBzOi8vdGQ2dG9ybWo4ai5leGVjdXRlLWFwaS51cy1lYXN0LTEuYW1hem9uYXdzLmNvbS9kZXYvc2FtbCIgLz48L1N1YmplY3RDb25maXJtYXRpb24+PC9TdWJqZWN0PjxDb25kaXRpb25zIE5vdEJlZm9yZT0iMjAxOC0wNS0xNlQwMjozMjoyMC4yNzhaIiBOb3RPbk9yQWZ0ZXI9IjIwMTgtMDUtMTZUMDM6MzI6MjAuMjc4WiI+PEF1ZGllbmNlUmVzdHJpY3Rpb24+PEF1ZGllbmNlPnVybjphbWF6b246d2Vic2VydmljZXM8L0F1ZGllbmNlPjwvQXVkaWVuY2VSZXN0cmljdGlvbj48L0NvbmRpdGlvbnM+PEF0dHJpYnV0ZVN0YXRlbWVudD48QXR0cmlidXRlIE5hbWU9Imh0dHBzOi8vYXdzLmFtYXpvbi5jb20vU0FNTC9BdHRyaWJ1dGVzL1JvbGUiPjxBdHRyaWJ1dGVWYWx1ZT5hcm46YXdzOmlhbTo6ODQ1OTA5MzczNjM2OnNhbWwtcHJvdmlkZXIvQURGU1RFU1QsYXJuOmF3czppYW06Ojg0NTkwOTM3MzYzNjpyb2xlL0FERlMtUHJvZHVjdGlvbjwvQXR0cmlidXRlVmFsdWU+PEF0dHJpYnV0ZVZhbHVlPmFybjphd3M6aWFtOjo4NDU5MDkzNzM2MzY6c2FtbC1wcm92aWRlci9BREZTVEVTVCxhcm46YXdzOmlhbTo6ODQ1OTA5MzczNjM2OnJvbGUvQURGUy1EZXY8L0F0dHJpYnV0ZVZhbHVlPjwvQXR0cmlidXRlPjxBdHRyaWJ1dGUgTmFtZT0iaHR0cHM6Ly9hd3MuYW1hem9uLmNvbS9TQU1ML0F0dHJpYnV0ZXMvUm9sZVNlc3Npb25OYW1lIj48QXR0cmlidXRlVmFsdWU+cnVzbGFuQGFkZnMubG9jYWw8L0F0dHJpYnV0ZVZhbHVlPjwvQXR0cmlidXRlPjwvQXR0cmlidXRlU3RhdGVtZW50PjxBdXRoblN0YXRlbWVudCBBdXRobkluc3RhbnQ9IjIwMTgtMDUtMTZUMDE6Mzg6MzUuNTQ2WiIgU2Vzc2lvbkluZGV4PSJfMzVkM2QwY2EtOTc2ZC00YWU4LTg1ZTUtZTY5MzkwYjM2NjBlIj48QXV0aG5Db250ZXh0PjxBdXRobkNvbnRleHRDbGFzc1JlZj51cm46ZmVkZXJhdGlvbjphdXRoZW50aWNhdGlvbjp3aW5kb3dzPC9BdXRobkNvbnRleHRDbGFzc1JlZj48L0F1dGhuQ29udGV4dD48L0F1dGhuU3RhdGVtZW50PjwvQXNzZXJ0aW9uPjwvc2FtbHA6UmVzcG9uc2U+";
 
-AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-  IdentityPoolId: environment.identityPool
-});
+
+var identityId = localStorage.getItem('cognitoid');
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit  {
+export class AppComponent  implements  OnInit{
   title = 'Local banks only PPlz!!!';
 
-
-  constructor(public cognito: CognitoUtil, public apigClientFactory: ApigClientFactory) {
+  
+  constructor(public cognito: CognitoUtil) { 
     console.log("AppComponent: constructor");
 
     console.log("==",cognito);
-
-    console.log("==",apigClientFactory);
-
-
-}
-ngOnInit() {
-
-  console.log("AppComponent: Checking if the user is already authenticated");
-  this.cognito.getSamlCredentials(samlResponse, {
-    callback() {
-
-    },
-    callbackWithParam(cred: any) {
-        // Include the passed-in callback here as well so that it's executed downstream
-        console.log("AppComponent: calling initAwsService in callback",cred);
-        AWS.config.credentials.accessKeyId = cred.AccessKeyId;
-        AWS.config.credentials.secretAccessKey = cred.SecretKey;
-        AWS.config.credentials.sessionToken = cred.SessionToken;
-        this.getBanks();
-    }
-
-    
-});
-
-
-
-
 }
 
- getBanks(){
 
+  ngOnInit() { 
+    var identityId = localStorage.getItem('cognitoid');
+
+    if (identityId != null &&  identityId != 'undefined'){
+      console.log('Identity ID==: ' + identityId);
+      console.log('Identity ID=1=: ' + typeof identityId);
   
-  var params = {};
-  var body = {};
-  var additionalParams = {};
-  
-  var apigwClient = this.apigClientFactory.newClient({
-    accessKey: AWS.config.credentials.accessKeyId,
-    secretKey: AWS.config.credentials.secretAccessKey,
-    sessionToken: AWS.config.credentials.sessionToken,
-    region: "us-east-1"
-  });
-
-  
-  apigwClient.bankGet(params, body, additionalParams)
-    .then(function (result) {
-        console.log(result);
-        alert('Successful ping: ' + result.data.status + ' - ' + result.data.agent);
-    }).catch(function (result) {
-        alert('Failed ping');
-        console.log(result);
-    });
-  
-
- }
+      this.loginWorkflow();
+  }else {
+      console.log('Calling GetID',this.cognito);
+      let cic:CognitoIdentityCredentials = <CognitoIdentityCredentials>this.cognito.getCognitoIdentity().config.credentials;
+      console.log('Calling ident',cic.params['IdentityPoolId']);
 
 
+        localStorage.setItem('cognitoid', cic.params['IdentityPoolId']);
+        identityId = localStorage.getItem('cognitoid');
+        this.loginWorkflow();
+  }
+}
 
+ loginWorkflow(){
+  var activelogin = sessionStorage.getItem('activelogin');
+  console.log("LOGIN Workflow" + activelogin);
+  if (activelogin=='inProgress'){                                   //ADFS login redirect from API Gateway
+      var samlResponse = this.getParameterByName('SAMLResponse');
+      sessionStorage.removeItem('activelogin');
+      if (samlResponse != null){
+        localStorage.setItem('samlResponse', samlResponse);
+      }
+  } 
+  else if (activelogin === null) {                                 //First page visit. Redirect to ADFS login.
+      var RPID = encodeURIComponent(environment.relayingPartyId);
+      var result = environment.adfsUrl + "?loginToRp=" + RPID;
+      sessionStorage.setItem('activelogin', 'inProgress');
+      //window.location.href = result;
+  }   
+  else {//Credentials exist, page refresh, etc.
+      console.log('activelogin already exists in session and the value is ' + activelogin);
+  }
+}
+
+ getParameterByName(name) {
+   let url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+  var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+      results = regex.exec(url);
+  if (!results) return null;
+  if (!results[2]) return '';
+  return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
 
 }
